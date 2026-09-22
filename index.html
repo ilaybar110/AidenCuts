@@ -159,6 +159,8 @@
     box-shadow:0 20px 44px -16px rgba(0,0,0,0.65);
     transform:scale(0.55) rotate(-8deg); opacity:0;
     animation:logo-in .8s cubic-bezier(.2,.85,.25,1) 1.85s forwards;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
   }
   @keyframes logo-in{ to{ transform:scale(1) rotate(0); opacity:1; } }
 
@@ -167,6 +169,7 @@
     width:100%; height:100%;
     object-fit:cover;
     object-position:center 38%;
+    touch-action:manipulation;
   }
 
   /* ---------- LAST SLOT BANNER ---------- */
@@ -490,11 +493,11 @@
   // repository, with Repository permissions -> Contents: Read and write.
   // Do not use a classic token or one scoped to your whole account.
   // ---------------------------------------------------------------
-  var GH_OWNER  = 'IlayBar110';
-  var GH_REPO   = 'AidenCuts';
+  var GH_OWNER  = 'YOUR_GITHUB_USERNAME';
+  var GH_REPO   = 'YOUR_REPO_NAME';
   var GH_BRANCH = 'main';
   var GH_PATH   = 'config.json';
-  var GH_TOKEN  = 'REDACTED-REVOKED-TOKEN';
+  var GH_TOKEN  = 'PASTE_YOUR_FINE_GRAINED_TOKEN_HERE';
 
   var currentTheme = 'copper';
   var currentLang  = 'en';
