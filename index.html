@@ -561,7 +561,8 @@
   async function initConfig(){
     var cfg = null;
     try{
-      var r = await fetch('./' + GH_PATH + '?t=' + Date.now());
+      var raw = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + GH_PATH;
+      var r = await fetch(raw + '?t=' + Date.now());
       if(r.ok) cfg = await r.json();
     }catch(e){}
     var time = cfg && cfg.time;
