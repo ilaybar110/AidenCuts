@@ -318,6 +318,15 @@
     color:#1a1108; font-weight:700; cursor:pointer;
   }
   .admin-btn:hover{ filter:brightness(1.06); }
+  .admin-toggle-btn{
+    width:100%; margin-top:10px; padding:10px; border-radius:10px;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink-dim);
+    font-weight:700; font-size:13.5px; cursor:pointer;
+    font-family:'Archivo',sans-serif;
+    transition:border-color .2s ease, color .2s ease;
+  }
+  .admin-toggle-btn:hover{ border-color:var(--copper-bright); color:var(--ink); }
+  .admin-toggle-btn.is-off{ border-color:var(--redstripe); color:var(--redstripe); }
   .admin-card{ max-height:86vh; overflow-y:auto; }
   .admin-divider{ height:1px; background:var(--line); margin:16px 0; }
   .admin-section-title{
@@ -404,7 +413,7 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.81L2 22l5.42-1.36a9.9 9.9 0 0 0 4.62 1.13h.01c5.46 0 9.9-4.45 9.9-9.91S17.5 2 12.04 2zm5.8 14.1c-.24.68-1.4 1.31-1.93 1.36-.5.05-1.02.24-3.4-.7-2.88-1.14-4.72-4.06-4.86-4.25-.14-.19-1.16-1.55-1.16-2.95 0-1.4.73-2.09.99-2.37.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.64.5.24.57.82 1.98.9 2.12.07.14.12.31.02.5-.1.19-.15.31-.3.48-.15.17-.31.38-.44.51-.15.14-.3.3-.13.58.17.28.75 1.25 1.62 2.03 1.11 1 2.05 1.32 2.33 1.47.28.14.44.12.6-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.09 1.65.78 1.93.92.28.14.47.21.53.33.07.12.07.68-.17 1.15z"/></svg>
       <span class="i18n" data-en="Make a booking" data-he="לקביעת תור">Make a booking</span>
     </a>
-<a class="link-btn wz" href="https://waze.com/ul?q=%D7%9B%D7%A4%D7%A8%20%D7%94%D7%90%D7%95%D7%A8%D7%A0%D7%99%D7%9D%20%D7%90%D7%94%D7%95%D7%93%2018&navigate=yes" target="_blank" rel="noopener">
+    <a class="link-btn wz" href="https://waze.com/ul?q=%D7%9B%D7%A4%D7%A8%20%D7%94%D7%90%D7%95%D7%A8%D7%A0%D7%99%D7%9D%20%D7%90%D7%94%D7%95%D7%93%2016&navigate=yes" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-6.3-7-11.2A7 7 0 0 1 19 9.8C19 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
       <span class="i18n" data-en="Get Directions" data-he="ניווט אלינו">Get Directions</span>
     </a>
@@ -428,6 +437,7 @@
       <p class="admin-section-title">Today&#8217;s last slot</p>
       <input type="text" class="admin-input admin-time" placeholder="e.g. 18:30">
       <button type="button" class="admin-btn admin-save">Save</button>
+      <button type="button" class="admin-toggle-btn admin-slot-toggle">Hide last-slot banner</button>
 
       <div class="admin-divider"></div>
 
@@ -493,14 +503,26 @@
   // repository, with Repository permissions -> Contents: Read and write.
   // Do not use a classic token or one scoped to your whole account.
   // ---------------------------------------------------------------
-  var GH_OWNER  = 'IlayBar110';
-  var GH_REPO   = 'AidenCuts';
+  var GH_OWNER  = 'YOUR_GITHUB_USERNAME';
+  var GH_REPO   = 'YOUR_REPO_NAME';
   var GH_BRANCH = 'main';
   var GH_PATH   = 'config.json';
-  var GH_TOKEN  = 'REDACTED-REVOKED-TOKEN';
+  var GH_TOKEN  = 'PASTE_YOUR_FINE_GRAINED_TOKEN_HERE';
 
   var currentTheme = 'copper';
   var currentLang  = 'en';
+  var currentSlotEnabled = true;
+  var slotBannerEl = document.querySelector('.slot-banner');
+
+  function applySlotVisibility(enabled){
+    currentSlotEnabled = enabled;
+    if(slotBannerEl) slotBannerEl.style.display = enabled ? '' : 'none';
+    var toggleBtn = document.querySelector('.admin-slot-toggle');
+    if(toggleBtn){
+      toggleBtn.textContent = enabled ? 'Hide last-slot banner' : 'Show last-slot banner';
+      toggleBtn.classList.toggle('is-off', !enabled);
+    }
+  }
 
   var THEMES = {
     copper:{ c:'#C1652F', cb:'#E98A44' },
@@ -545,9 +567,14 @@
     var time = cfg && cfg.time;
     var theme = cfg && cfg.theme;
     var lang = cfg && cfg.lang;
+    var slotEnabled = cfg ? cfg.slotEnabled !== false : null;
     if(!time){ try{ time = localStorage.getItem('aidenLastSlot'); }catch(e){} }
     if(!theme){ try{ theme = localStorage.getItem('aidenTheme'); }catch(e){} }
     if(!lang){ try{ lang = localStorage.getItem('aidenLang'); }catch(e){} }
+    if(slotEnabled === null){
+      try{ slotEnabled = localStorage.getItem('aidenSlotEnabled') !== '0'; }catch(e){ slotEnabled = true; }
+    }
+    applySlotVisibility(slotEnabled);
     if(time && slotTimeEl){ slotTimeEl.textContent = time; }
     applyTheme(theme || 'copper');
     applyLanguage(lang || 'en');
@@ -610,6 +637,7 @@
   var unlockBtn = modal.querySelector('.admin-unlock');
   var saveBtn = modal.querySelector('.admin-save');
   var disableBtn = modal.querySelector('.admin-disable');
+  var slotToggleBtn = modal.querySelector('.admin-slot-toggle');
 
   function isAdminOff(){
     try{ return localStorage.getItem('aidenAdminOff') === '1'; }catch(e){ return false; }
@@ -643,7 +671,7 @@
     if(v && slotTimeEl){ slotTimeEl.textContent = v; }
     try{ localStorage.setItem('aidenLastSlot', v); }catch(e){}
 
-    var cfg = { time: v, theme: currentTheme, lang: currentLang };
+    var cfg = { time: v, theme: currentTheme, lang: currentLang, slotEnabled: currentSlotEnabled };
     var originalLabel = saveBtn.textContent;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving\u2026';
@@ -667,6 +695,27 @@
       closeModal();
     }
   }
+  async function toggleSlotBanner(){
+    var nextEnabled = !currentSlotEnabled;
+    var originalLabel = slotToggleBtn.textContent;
+    slotToggleBtn.disabled = true;
+    slotToggleBtn.textContent = 'Saving\u2026';
+    var cfg = {
+      time: slotTimeEl ? slotTimeEl.textContent.trim() : '',
+      theme: currentTheme,
+      lang: currentLang,
+      slotEnabled: nextEnabled
+    };
+    try{
+      await saveConfigToGitHub(cfg);
+      applySlotVisibility(nextEnabled);
+      try{ localStorage.setItem('aidenSlotEnabled', nextEnabled ? '1' : '0'); }catch(e){}
+    }catch(err){
+      slotToggleBtn.textContent = originalLabel;
+      alert('Could not save to GitHub: ' + err.message);
+    }
+    slotToggleBtn.disabled = false;
+  }
 
   if(logo){
     logo.style.cursor = 'pointer';
@@ -685,6 +734,7 @@
   unlockBtn.addEventListener('click', unlock);
   saveBtn.addEventListener('click', save);
   disableBtn.addEventListener('click', disableForever);
+  slotToggleBtn.addEventListener('click', toggleSlotBanner);
   document.querySelectorAll('.theme-swatch').forEach(function(b){
     b.addEventListener('click', function(){ applyTheme(b.getAttribute('data-theme')); });
   });
