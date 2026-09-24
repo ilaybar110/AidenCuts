@@ -498,16 +498,19 @@
   }
 
   // ---------------------------------------------------------------
-  // GITHUB WRITE-BACK CONFIG — fill these in once you create the repo.
-  // Use a FINE-GRAINED personal access token scoped to ONLY this one
-  // repository, with Repository permissions -> Contents: Read and write.
-  // Do not use a classic token or one scoped to your whole account.
+  // GITHUB WRITE-BACK CONFIG
+  // These are used only to READ config.json, which is public — no
+  // credential is needed or allowed here. Writing goes through the
+  // Netlify function at /.netlify/functions/save-config, which holds
+  // the token server-side as the GH_TOKEN environment variable.
+  // NEVER put a token in this file: the repo is public and GitHub's
+  // secret scanner revokes any token committed to it within moments.
   // ---------------------------------------------------------------
   var GH_OWNER  = 'IlayBar110';
   var GH_REPO   = 'AidenCuts';
   var GH_BRANCH = 'main';
   var GH_PATH   = 'config.json';
-  var GH_TOKEN  = 'REDACTED-REVOKED-TOKEN';
+  var SAVE_ENDPOINT = '/.netlify/functions/save-config';
 
   var currentTheme = 'copper';
   var currentLang  = 'en';
@@ -582,32 +585,19 @@
   }
   initConfig();
 
-  // Commits {time, theme, lang} to config.json in the repo via GitHub's
-  // Contents API, so every visitor sees the change on their next load.
+  // Commits {time, theme, lang, slotEnabled} to config.json in the repo,
+  // so every visitor sees the change on their next load. The browser
+  // never talks to GitHub's API and never holds a token — it posts to
+  // our own Netlify function, which does the commit server-side.
   async function saveConfigToGitHub(cfg){
-    var api = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_PATH;
-    var headers = {
-      'Authorization': 'Bearer ' + GH_TOKEN,
-      'Accept': 'application/vnd.github+json'
-    };
-    var getRes = await fetch(api + '?ref=' + GH_BRANCH, { headers: headers });
-    if(!getRes.ok) throw new Error('Could not read current config (HTTP ' + getRes.status + ')');
-    var current = await getRes.json();
-    var json = JSON.stringify(cfg, null, 2);
-    var content = btoa(unescape(encodeURIComponent(json)));
-    var putRes = await fetch(api, {
-      method: 'PUT',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
-      body: JSON.stringify({
-        message: 'Update site settings via manager hub',
-        content: content,
-        sha: current.sha,
-        branch: GH_BRANCH
-      })
+    var res = await fetch(SAVE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg)
     });
-    if(!putRes.ok){
-      var errBody = await putRes.json().catch(function(){ return {}; });
-      throw new Error((errBody && errBody.message) || ('GitHub save failed (HTTP ' + putRes.status + ')'));
+    if(!res.ok){
+      var errBody = await res.json().catch(function(){ return {}; });
+      throw new Error((errBody && errBody.error) || ('Save failed (HTTP ' + res.status + ')'));
     }
   }
 
